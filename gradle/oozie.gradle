@@ -1,0 +1,28 @@
+task oozieZip(type: Zip) {
+    group 'build'
+    description 'Archives the Oozie workflow and libs'
+
+    baseName rootProject.name
+    classifier 'hdfs'
+
+    from('src/main/workflow'){
+        into 'hdfs/workflow'
+    }
+    from('src/main/bash'){
+        into 'hdfs/bash'
+    }
+    from(jar){
+        into "lib"
+    }
+    def deps = configurations.compile {
+        transitive = false
+    }
+    from(deps) {
+        exclude 'spark-*.jar'
+        exclude '*org.apache.spark*'
+        into "lib"
+    }
+    doLast {
+        println archiveName
+    }
+}

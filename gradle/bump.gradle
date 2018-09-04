@@ -1,0 +1,34 @@
+ext {
+    versionPath="$projectDir/version.gradle"
+}
+
+task bumpMajor(type: VersionTask){
+    group 'Version'
+    description "Bumps major in version [$versionPath]"
+
+    project.logger.info("Bumping major of version [$version]")
+    versionFile new File(versionPath)
+    def (int major, int minor) = fromString("$version")
+    project.logger.debug("Parsed version with major [$major] and minor [$minor] from file [$versionFile]")
+    setVersion(major + 1, minor)
+}
+
+task bumpMinor(type: VersionTask){
+    group 'Version'
+    description "Bumps minor in version [$versionPath]"
+
+    project.logger.info("Bumping minor of version [$version]")
+    versionFile new File(versionPath)
+    def (int major, int minor) = fromString("$version")
+    project.logger.debug("Parsed version with major [$major] and minor [$minor] from file [$versionFile]")
+    setVersion(major, minor + 1)
+}
+
+task version {
+    group 'Version'
+    description "Returns the current version [$versionPath]"
+
+    doLast {
+        println "Current version [$version]"
+    }
+}

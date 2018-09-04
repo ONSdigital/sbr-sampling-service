@@ -1,0 +1,23 @@
+import java.util.regex.Matcher
+
+ext {
+    releaseScriptPath = "buildSrc/src/main/bash"
+}
+
+release {
+    versionPropertyFile = "$rootDir/version.gradle"
+    versionPatterns = [/(\w+)([^\w]*$)/: { Matcher m, Project p -> m.replaceAll("${(m[0][1] as int) + 1}${m[0][2]}") }]
+}
+
+task gitrelease(type: Exec) {
+    args newVersion
+    project.logger.info("Bumping current version [$version] to [$newVersion]")
+    if (newVersion ==~ /\d{1}.\d{1}$/) {
+        // chmod +x release.sh
+        project.logger.info("New version [$newVersion] qualifies and fulfils pattern")
+        commandLine "./$releaseScriptPath/release.sh" , "$version" , newVersion
+    } else {
+        project.logger.error("New version [$newVersion] does not match pattern [\\d{1}.\\d{1}\$]")
+        commandLine 'echo', "ERROR: Invalid version format with [$newVersion]"
+    }
+}

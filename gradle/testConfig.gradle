@@ -1,0 +1,13 @@
+test {
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+    // true if you want to fail instantly - default is false
+    failFast = false
+
+    onOutput { descriptor, event ->
+        logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+    }
+
+    // exclude "$projectDir/buildSrc/test/groovy/**"
+}

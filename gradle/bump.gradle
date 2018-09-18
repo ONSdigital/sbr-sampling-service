@@ -10,7 +10,7 @@ task bumpMajor(type: VersionTask){
     versionFile new File(versionPath)
     def (int major, int minor) = fromString("$version")
     project.logger.debug("Parsed version with major [$major] and minor [$minor] from file [$versionFile]")
-    setVersion(major + 1, minor)
+    setVersion(major + 1, 0)
 }
 
 task bumpMinor(type: VersionTask){

@@ -10,6 +10,7 @@ import uk.gov.ons.sbr.helpers.TestSessionManager
 import uk.gov.ons.sbr.helpers.sample.SampleEnterpriseUnit.FieldNames._
 import uk.gov.ons.sbr.helpers.utils.TestFileUtils.{createAPath, createTempDirectory, createTempFile}
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
+import uk.gov.ons.sbr.service.repository.hive.HiveFrame
 
 class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
 
@@ -17,7 +18,9 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
     private val ProvidedPropertiesPrefix = "stratification_props_"
     private val TargetOutputDirectoryPrefix = "sampling_output_123_"
 
-    val TargetUnitFrame = "someUnitFrame"
+    val TargetDatabase = "db"
+    val TargetTableName = "enterprise_frame"
+    val TargetUnitFrame = HiveFrame(TargetDatabase, TargetTableName)
 
     val propertiesPath = createTempFile(prefix = ProvidedPropertiesPrefix)
     val targetOutputDirectory = createTempDirectory(TargetOutputDirectoryPrefix)
@@ -45,7 +48,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
           (repository.retrieveTableAsDataFrame(_: String)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
             .returning(Try(aSeqOfFrameValues.toDF))
 
-          val samplingRuntimeArguments = List(TargetUnitFrame, propertiesPath.toString, targetOutputDirectory.toString)
+          val samplingRuntimeArguments = List(TargetDatabase, TargetTableName, propertiesPath.toString, targetOutputDirectory.toString)
 
           validation.validateAndParseRuntimeArgs(args = samplingRuntimeArguments)(sparkSession) shouldBe
             a [SampleMethodsArguments]
@@ -59,7 +62,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
               .returning(Try(aSeqOfFrameValues.toDF))
 
             val badPropertiesPath = createAPath(pathStr = "invalid_stratification_props_path")
-            val badArgument = List(TargetUnitFrame, badPropertiesPath.toString, targetOutputDirectory.toString)
+            val badArgument = List(TargetDatabase, TargetTableName, badPropertiesPath.toString, targetOutputDirectory.toString)
 
             val errMsg = the [Exception] thrownBy validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
             errMsg.getMessage should startWith regex s"Path does not exist: .*${badPropertiesPath.toString}.+"
@@ -72,7 +75,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
               .returning(Try(aSeqOfFrameValues.toDF))
 
             val invalidOutputDirectory = createAPath(pathStr = "invalid_directory.txt")
-            val badArgument = List(TargetUnitFrame, propertiesPath.toString, invalidOutputDirectory.toString)
+            val badArgument = List(TargetDatabase, TargetTableName, propertiesPath.toString, invalidOutputDirectory.toString)
 
             the [Exception] thrownBy {
               validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
@@ -83,7 +86,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
             (repository.retrieveTableAsDataFrame(_: String)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
               .throwing(new Exception(s"Cannot create sql.DataFrame from given $TargetUnitFrame"))
 
-            val badArgument = List(TargetUnitFrame, propertiesPath.toString, targetOutputDirectory.toString)
+            val badArgument = List(TargetDatabase, TargetTableName, propertiesPath.toString, targetOutputDirectory.toString)
 
             the [Exception] thrownBy {
               validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
@@ -104,7 +107,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
       }
 
       "when there are more then three arguments" in new Fixture {
-        val tooManyArgs = List("enterprise_2018", "tmp/props/stratification_properties.csv", "/sampling/output", "/sampling/output")
+        val tooManyArgs = List("db", "enterprise_2018", "tmp/props/stratification_properties.csv", "/sampling/output", "/sampling/output")
 
         the [IllegalArgumentException] thrownBy {
           validation.validateAndParseRuntimeArgs(args = tooManyArgs)(sparkSession)

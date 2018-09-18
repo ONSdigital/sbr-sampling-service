@@ -15,6 +15,7 @@ import uk.gov.ons.sbr.helpers.utils.TestFileUtils.{createAPath, createTempDirect
 import uk.gov.ons.sbr.helpers.utils.{DataTransformation, ExportTable, FileProcessorHelper}
 import uk.gov.ons.sbr.service.SamplingServiceMain
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
+import uk.gov.ons.sbr.service.repository.hive.HiveFrame
 import uk.gov.ons.sbr.service.validation.ServiceValidation
 
 
@@ -44,7 +45,9 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
     )
 
   private val ProvidedPropertiesPrefix = "stratification_props_"
-  private val TargetUnitFrame = "someUnitFrame"
+  private val TargetDatabase = "db"
+  private val TargetTableName = "enterprise_frame"
+  private val TargetUnitFrame = HiveFrame(TargetDatabase, TargetTableName)
   private val TargetOutputDirectoryPrefix = "sampling_output_123_"
 
   private val repository = mock[UnitFrameRepository]
@@ -70,7 +73,7 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
       (repository.retrieveTableAsDataFrame(_: TableName)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
         .returning(Try(listOfUnitsAsFrame(EnterpriseUnitFrame)))
 
-      val samplingRuntimeArguments = List(TargetUnitFrame, propertiesPath.toString, targetOutputDirectory.toString)
+      val samplingRuntimeArguments = List(TargetDatabase, TargetTableName, propertiesPath.toString, targetOutputDirectory.toString)
       val inputs = validation.validateAndParseRuntimeArgs(args = samplingRuntimeArguments)(sparkSession)
 
       When(s"the Sampling Service is invoked on a $TargetUnitFrame with ${propertiesPath.getFileName} to be stored at ${targetOutputDirectory.getFileName}")
@@ -110,7 +113,7 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
       (repository.retrieveTableAsDataFrame(_: TableName)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
         .returning(Try(listOfUnitsAsFrame(EnterpriseUnitFrame)))
 
-      val badArgument = List(TargetUnitFrame, badPropertiesPath.toString, targetOutputDirectory.toString)
+      val badArgument = List(TargetDatabase, TargetTableName, badPropertiesPath.toString, targetOutputDirectory.toString)
 
       val errMsg = the [Exception] thrownBy validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
       errMsg.getMessage should startWith regex s"Path does not exist: .*${badPropertiesPath.toString}.+"
@@ -132,7 +135,7 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
       (repository.retrieveTableAsDataFrame(_: TableName)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
         .returning(Try(listOfUnitsAsFrame(EnterpriseUnitFrame)))
 
-      val badArgument = List(TargetUnitFrame, propertiesPath.toString, invalidOutputDirectory.toString)
+      val badArgument = List(TargetDatabase, TargetTableName, propertiesPath.toString, invalidOutputDirectory.toString)
       the [Exception] thrownBy {
         validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
       } should have message s"Path does not resolve to an existing directory ${invalidOutputDirectory.toString}"
@@ -153,7 +156,7 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
       (repository.retrieveTableAsDataFrame(_: TableName)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
         .throwing(new Exception(s"Cannot create sql.DataFrame from given $TargetUnitFrame"))
 
-      val badArgument = List(TargetUnitFrame, propertiesPath.toString, targetOutputDirectory.toString)
+      val badArgument = List(TargetDatabase, TargetTableName, propertiesPath.toString, targetOutputDirectory.toString)
       the [Exception] thrownBy {
         validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
       } should have message s"Cannot create sql.DataFrame from given $TargetUnitFrame"

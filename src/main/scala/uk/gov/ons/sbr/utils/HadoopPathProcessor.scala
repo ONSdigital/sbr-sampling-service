@@ -1,11 +1,14 @@
 package uk.gov.ons.sbr.utils
 
-import java.io.File
-import java.nio.file.Path
+import scala.util.Try
 
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object FileProcessor {
+import uk.gov.ons.registers.Validation
+import uk.gov.ons.sbr.service.repository.UnitFrameRepository.ErrorMessage
+
+object HadoopPathProcessor {
   val Delimiter = ","
   val CSV = "csv"
   val Header = "header"
@@ -17,8 +20,8 @@ object FileProcessor {
       .csv(filePath.toString)
 
   def fromString(pathStr: String): Path =
-    new File(pathStr).toPath
+    new Path(pathStr)
 
-  def filterDirectory(aDirectory: Path, suffixPattern: String): List[File] =
-    aDirectory.toFile.listFiles.filter(_.getName.endsWith(suffixPattern)).toList
+  def validatePath(pathStr: String): Validation[ErrorMessage, Path] =
+    Validation.fromTry(Try(fromString(pathStr)), onFailure = _.getMessage)
 }

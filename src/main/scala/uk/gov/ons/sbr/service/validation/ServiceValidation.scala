@@ -1,17 +1,19 @@
 package uk.gov.ons.sbr.service.validation
 
-import java.nio.file.Path
 import javax.inject.Singleton
 
 import scala.util.Try
 
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import uk.gov.ons.registers.Validation.ErrorMessage
 import uk.gov.ons.registers.{Failure, Success, Validation}
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
 import uk.gov.ons.sbr.service.repository.hive.HiveFrame
-import uk.gov.ons.sbr.utils.FileProcessor
+import uk.gov.ons.sbr.support.HdfsSupport
+import uk.gov.ons.sbr.utils.HadoopPathProcessor
+import uk.gov.ons.sbr.utils.HadoopPathProcessor.Delimiter
 
 @Singleton
 class ServiceValidation(repository: UnitFrameRepository) {
@@ -24,19 +26,23 @@ class ServiceValidation(repository: UnitFrameRepository) {
           s"[$serviceArgs], expected (3) got [${serviceArgs.length}]")
     }
 
-  private def checkProperties(implicit sparkSession: SparkSession): String => Validation[ErrorMessage, DataFrame] =
-    (FileProcessor.fromString _).andThen( path =>
-      Validation.fromTry(Try(FileProcessor.readCsvFileAsDataFrame(path)), onFailure = _.getMessage))
+  private def foldValidatedPath[A](pathStr: String)(parsePath: Path => Validation[ErrorMessage, A]): Validation[ErrorMessage, A] =
+    Validation.fold(HadoopPathProcessor.validatePath(pathStr))(
+      onFailure = err => Failure(err.mkString(Delimiter)),
+      onSuccess = parsePath(_))
+
+  private def checkProperties(pathStr: String)(implicit sparkSession: SparkSession): Validation[ErrorMessage, DataFrame] =
+    foldValidatedPath(pathStr)(path =>
+      Validation.fromTry(Try(HadoopPathProcessor.readCsvFileAsDataFrame(path)), onFailure = _.getMessage))
 
   private def checkUnitFrame(frameNameStr: String)(implicit sparkSession: SparkSession): Validation[ErrorMessage, DataFrame] =
     Validation.fromTry(repository.retrieveTableAsDataFrame(frameNameStr), onFailure =
       cause => throw new Exception(s"Failed to construct Hive Table to DataFrame", cause))
 
-  private def checkOutputDirectory: String => Validation[ErrorMessage, Path] =
-    (FileProcessor.fromString _).andThen( path =>
-      if (path.toFile.isDirectory) Success(path)
-      else Failure(s"Path does not resolve to an existing directory ${path.getFileName}")
-    )
+  private def checkOutputDirectory(pathStr: String)(implicit sparkSession: SparkSession): Validation[ErrorMessage, Path] =
+    foldValidatedPath(pathStr)(path =>
+      if (HdfsSupport.exists(path)) Success(path)
+      else Failure(s"Path [$pathStr] does not resolve to an existing directory"))
 
   def validateAndParseRuntimeArgs(args: List[String])(implicit sparkSession: SparkSession): SampleMethodsArguments = {
     // check length of list first
@@ -46,10 +52,10 @@ class ServiceValidation(repository: UnitFrameRepository) {
     val untiFrameStr = HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)
 
     val formattedArgsOrError = Validation.map3(checkUnitFrame(untiFrameStr),
-      checkProperties.apply(stratificationPropertiesStr), checkOutputDirectory(outputDirectoryStr)
+      checkProperties(stratificationPropertiesStr), checkOutputDirectory(outputDirectoryStr)
     )(SampleMethodsArguments)
 
     Validation.fold(formattedArgsOrError)(
-      errMsgs => throw new Exception(errMsgs.mkString(FileProcessor.Delimiter)), identity)
+      errMsgs => throw new Exception(errMsgs.mkString(Delimiter)), identity)
   }
 }

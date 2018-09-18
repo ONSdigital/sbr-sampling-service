@@ -5,6 +5,7 @@ import scala.util.Try
 import org.apache.spark.sql.SparkSession
 
 import uk.gov.ons.registers.methods.{Sample, Stratification}
+import uk.gov.ons.sbr.logger.SessionLogger
 import uk.gov.ons.sbr.service.repository.hive.HiveUnitFrameRepository
 import uk.gov.ons.sbr.service.session.SparkSessionManager
 import uk.gov.ons.sbr.service.validation.{SampleMethodsArguments, ServiceValidation}
@@ -17,9 +18,10 @@ object SamplingServiceMain {
     import SparkSessionManager.sparkSession
 
     SparkSessionManager.withSpark{
-      println("Initiating Sampling Service")
+      SessionLogger.log(msg ="Initiating Sampling Service")
       val processedArguments: SampleMethodsArguments = new ServiceValidation(HiveUnitFrameRepository)
         .validateAndParseRuntimeArgs(args = args.toList)
+      SessionLogger.log(msg ="Passed validation. Beginning sample creation process..")
       createSample(processedArguments)
     }
   }
@@ -29,6 +31,8 @@ object SamplingServiceMain {
       Stratification.stratification(sparkSession)
         .stratify(args.unitFrame, args.stratificationProperties)))(onFailure = err =>
       throw new Exception(s"Failed at Stratification method with error [${err.getMessage}]"), onSuccess = identity)
+
+    SessionLogger.log(msg ="Applying stratification method process [Passed].")
 
     TrySupport.fold(Try(Sample.sample(sparkSession)
       .create(stratifiedFrameDf, args.stratificationProperties)))(onFailure = identity, onSuccess =

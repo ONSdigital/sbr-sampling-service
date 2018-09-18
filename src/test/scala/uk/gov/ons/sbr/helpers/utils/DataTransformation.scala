@@ -2,12 +2,12 @@ package uk.gov.ons.sbr.helpers.utils
 
 import java.io.File
 import java.nio.file.Path
+//import org.apache.hadoop.fs.Path
 
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
-import uk.gov.ons.sbr.utils.FileProcessor
-import uk.gov.ons.sbr.utils.FileProcessor.CSV
+import uk.gov.ons.sbr.utils.HadoopPathProcessor.CSV
 
 object DataTransformation {
   private val HeaderIndex = 1

@@ -4,7 +4,7 @@ import java.io.{BufferedWriter, File, FileWriter}
 import java.nio.file.Path
 
 import uk.gov.ons.sbr.helpers.utils.DataTransformation.RawTable
-import uk.gov.ons.sbr.utils.FileProcessor.Delimiter
+import uk.gov.ons.sbr.utils.HadoopPathProcessor.Delimiter
 
 object ExportTable {
   // Loan

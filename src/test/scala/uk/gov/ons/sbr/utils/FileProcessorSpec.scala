@@ -1,10 +1,12 @@
 package uk.gov.ons.sbr.utils
 
 import java.io.FileWriter
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
+import org.apache.hadoop.fs.{Path => HdfsPath}
 import org.scalatest.{FreeSpec, Matchers}
 
+import uk.gov.ons.registers.{Failure, Success}
 import uk.gov.ons.sbr.helpers.TestSessionManager
 import uk.gov.ons.sbr.helpers.utils.TestFileUtils.createTempFile
 
@@ -20,6 +22,7 @@ class FileProcessorSpec extends FreeSpec with Matchers{
 
   private trait Fixture {
     val aSparkSession = TestSessionManager.sparkSession
+    val aPathString = "/tmp/test/file/example.csv"
   }
 
   "A file is read" - {
@@ -27,17 +30,23 @@ class FileProcessorSpec extends FreeSpec with Matchers{
       "with a sparkSession" in new Fixture {
         val somePath = createTempFile(prefix = "example_string")
         writeLines(somePath, s"Id,Greeting\n1,Hello World\n2,Hallo Welt")
-        FileProcessor.readCsvFileAsDataFrame(somePath)(aSparkSession).count shouldBe 2L
+        HadoopPathProcessor.readCsvFileAsDataFrame(new HdfsPath(somePath.toString))(aSparkSession).count shouldBe 2L
       }
     }
   }
 
   "A file path" - {
-    "created from a path string" in new Fixture {
-      val aPathString = "/tmp/test/file/example.csv"
-      val expectedPath = Paths.get(aPathString)
-      FileProcessor.fromString(aPathString) shouldBe expectedPath
+    "can be generated" - {
+      "when path is valid" in new Fixture {
+        HadoopPathProcessor.validatePath(aPathString) shouldBe Success(new HdfsPath(aPathString))
+      }
+    }
+
+    "fails to be created" - {
+      "when path contains invalid characters" ignore new Fixture {
+        val badPathString = "|"
+        HadoopPathProcessor.validatePath(badPathString) shouldBe a [Failure[_]]
+      }
     }
   }
-
 }

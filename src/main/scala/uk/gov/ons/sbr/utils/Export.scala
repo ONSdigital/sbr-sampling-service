@@ -1,11 +1,10 @@
 package uk.gov.ons.sbr.utils
 
-import java.nio.file.Path
-
+import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.{DataFrame, SaveMode}
 
 import uk.gov.ons.sbr.logger.SessionLogger
-import uk.gov.ons.sbr.utils.FileProcessor.{CSV, Header}
+import uk.gov.ons.sbr.utils.HadoopPathProcessor.{CSV, Header}
 
 object Export {
   def apply(dataFrame: DataFrame, path: Path, headerOption: Boolean = true): Unit = {

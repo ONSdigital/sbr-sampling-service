@@ -79,7 +79,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
 
             the [Exception] thrownBy {
               validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
-            } should have message s"Path does not resolve to an existing directory ${invalidOutputDirectory.toString}"
+            } should have message s"Path [${invalidOutputDirectory.toString}] does not resolve to an existing directory"
           }
 
           "when the frame cannot be found" in new Fixture {

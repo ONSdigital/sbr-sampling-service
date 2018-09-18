@@ -12,7 +12,7 @@ import uk.gov.ons.sbr.helpers.sample.SampleEnterpriseUnit
 import uk.gov.ons.sbr.helpers.sample.SampleEnterpriseUnit.FieldNames._
 import uk.gov.ons.sbr.helpers.utils.DataTransformation.RawTable
 import uk.gov.ons.sbr.helpers.utils.TestFileUtils.{createAPath, createTempDirectory}
-import uk.gov.ons.sbr.helpers.utils.{DataTransformation, ExportTable, FileProcessorHelper}
+import uk.gov.ons.sbr.helpers.utils.{DataTransformation, ExportTable, FileProcessor}
 import uk.gov.ons.sbr.service.SamplingServiceMain
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
 import uk.gov.ons.sbr.service.repository.hive.HiveFrame
@@ -80,7 +80,7 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
       SamplingServiceMain.createSample(inputs)(sparkSession)
 
       Then(s"the sample should exist and be readable from the $targetOutputDirectory directory")
-      val sampleCSV = (DataTransformation.getSampleFile _).andThen(FileProcessorHelper.lineAsListOfFields)
+      val sampleCSV = (DataTransformation.getSampleFile _).andThen(FileProcessor.lineAsListOfFields)
         .apply(targetOutputDirectory)
 
       sampleCSV ==
@@ -138,7 +138,7 @@ class SamplingServiceAcceptanceSpec extends SessionAcceptanceSpec with MockFacto
       val badArgument = List(TargetDatabase, TargetTableName, propertiesPath.toString, invalidOutputDirectory.toString)
       the [Exception] thrownBy {
         validation.validateAndParseRuntimeArgs(args = badArgument)(sparkSession)
-      } should have message s"Path does not resolve to an existing directory ${invalidOutputDirectory.toString}"
+      } should have message s"Path [${invalidOutputDirectory.toString}] does not resolve to an existing directory"
     }
   }
 

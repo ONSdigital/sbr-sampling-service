@@ -17,6 +17,7 @@ object SamplingServiceMain {
     import SparkSessionManager.sparkSession
 
     SparkSessionManager.withSpark{
+      println("Initiating Sampling Service")
       val processedArguments: SampleMethodsArguments = new ServiceValidation(HiveUnitFrameRepository)
         .validateAndParseRuntimeArgs(args = args.toList)
       createSample(processedArguments)

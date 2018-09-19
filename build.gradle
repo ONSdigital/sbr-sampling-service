@@ -13,7 +13,7 @@ plugins {
     id 'scala'
     id "com.github.maiflai.scalatest"    version "0.22"
     id 'net.researchgate.release'        version '2.6.0'
-//    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 apply plugin: 'scala'
@@ -33,8 +33,8 @@ mainClassName = mainClass
 
 apply from: "$rootDir/version.gradle"
 apply from: "$rootDir/gradle/bump.gradle"
-apply from: "$rootDir/gradle/oozie.gradle"
-apply from: "$rootDir/gradle/packaging.gradle"
+//apply from: "$rootDir/gradle/oozie.gradle"
+//apply from: "$rootDir/gradle/packaging.gradle"
 apply from: "$rootDir/gradle/release.gradle"
 apply from: "$rootDir/gradle/provided.gradle"
 apply from: "$rootDir/gradle/repositories.gradle"

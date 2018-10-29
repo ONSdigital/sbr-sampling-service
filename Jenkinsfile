@@ -5,7 +5,7 @@ rtGradle.tool = 'gradle_4.9'
 rtGradle.resolver server: server, repo: 'VR_Regsiters'
 rtGradle.deployer server: server, repo: 'registers-snapshots'
 rtGradle.deployer.artifactDeploymentPatterns.addExclude("*.tar")
-rtGradle.deployer.artifactDeploymentPatterns.addExclude("*.${env.BUILD_ID}.zip")
+//rtGradle.deployer.artifactDeploymentPatterns.addExclude("*.${env.BUILD_ID}.zip")
 def agentGradleVersion = 'gradle_4-9'
 def distDir = 'build/dist/'
 
@@ -23,13 +23,13 @@ pipeline {
         ansiColor('xterm')
     }
     environment {
-        ENVIRONMENT="${params.ENV_NAME}"
-        SUB_ORGANIZATION="sbr"
-        SERVICE_NAME="$SUB_ORGANIZATION-sampling-service"
-        STAGE="PreBuild"
+        ENVIRONMENT = "${params.ENV_NAME}"
+        SUB_ORGANIZATION = "sbr"
+        SERVICE_NAME = "$SUB_ORGANIZATION-sampling-service"
+        STAGE = "PreBuild"
 
-        EDGE_NODE=""
-        PROD_NODE=""
+        EDGE_NODE = ""
+        PROD_NODE = ""
     }
     parameters {
         choice(choices: 'dev\ntest\nbeta', description: 'Into what environment wants to deploy oozie config e.g. dev, test or beta?', name: 'ENV_NAME')
@@ -44,11 +44,16 @@ pipeline {
             steps {
                 deleteDir()
                 checkout scm
+                script {
+                    buildInfo.name = "${SERVICE_NAME}"
+                    buildInfo.number = "${BUILD_NUMBER}"
+                    buildInfo.env.collect()
+                }
                 stash name: 'Checkout'
             }
         }
 
-        stage('Build'){
+        stage('Build') {
             agent { label "build.${agentGradleVersion}" }
             environment {
                 STAGE = "Build"
@@ -73,7 +78,7 @@ pipeline {
         stage('Validate') {
             failFast true
             parallel {
-                stage('Test: Unit'){
+                stage('Test: Unit') {
                     agent { label "build.${agentGradleVersion}" }
                     environment {
                         STAGE = "Validate - Test: Unit"
@@ -112,7 +117,7 @@ pipeline {
                     }
                     steps {
                         unstash name: 'Checkout'
-                        colourText("info","Running style tests")
+                        colourText("info", "Running style tests")
                         sh 'gradle scalaStyle'
                     }
                     post {
@@ -160,13 +165,13 @@ pipeline {
             }
         }
 
-        stage ('Publish') {
+        stage('Publish') {
             agent { label "build.${agentGradleVersion}" }
-            when {
+            /*when {
                 branch "master"
                 // evaluate the when condition before entering this stage's agent, if any
                 beforeAgent true
-            }
+            }*/
             environment {
                 STAGE = 'Publish'
             }
@@ -175,7 +180,23 @@ pipeline {
                 unstash name: 'Checkout'
                 script {
                     rtGradle.run tasks: 'clean artifactoryPublish'
-                    server.publishBuildInfo buildInfo
+
+                    sh "find . -name '*.jar' -type f"
+                    sh "find . -name '*.zip' -type f"
+
+                    def uploadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "build/libs/*.jar",
+                                "target": "registers-snapshots/uk/gov/ons/sbr/${buildInfo.name}/${buildInfo.number}/"
+                            },
+                            { 
+                                "pattern": "build/distributions/*.zip",
+                                "target": "registers-snapshots/uk/gov/ons/sbr/${buildInfo.name}/${buildInfo.number}/"
+                            }
+                        ]
+                    }"""
+                    server.upload spec: uploadSpec, buildInfo: buildInfo
                 }
             }
             post {
@@ -188,13 +209,13 @@ pipeline {
             }
         }
 
-        stage("Retrieve Artifact"){
+        stage("Retrieve Artifact") {
             agent { label "deploy.jenkins.slave" }
-            when {
+            /*when {
                 branch "master"
                 // evaluate the when condition before entering this stage's agent, if any
                 beforeAgent true
-            }
+            }*/
             environment {
                 STAGE = 'Retrieve Artifact'
             }
@@ -212,15 +233,17 @@ pipeline {
                     server.download spec: downloadSpec, buildInfo: buildInfo
                 }
                 echo "archiving jar to [$ENVIRONMENT] environment"
+                sh "ls -laR"
+                sh "find . -name '*.jar' -type f"
                 sshagent(["sbr-$ENVIRONMENT-ci-ssh-key"]) {
                     withCredentials([string(credentialsId: "prod_node", variable: 'PROD_NODE'), string(credentialsId: "edge_node", variable: 'EDGE_NODE')]) {
                         sh """
-                            ssh sbr-$ENVIRONMENT-ci@$EDGE_NODE mkdir -p $SERVICE_NAME/
+                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE mkdir -p $SERVICE_NAME/
                             echo "Successfully created new directory [$SERVICE_NAME/]"
                             scp -r $distDir* sbr-$ENVIRONMENT-ci@$EDGE_NODE:$SERVICE_NAME/
                             echo "Successfully moved artifact [JAR] and scripts to $SERVICE_NAME/"
-                            ssh sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -mkdir -p hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/${buildInfo.number}
-                            ssh sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -put -f $SERVICE_NAME/* hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/${buildInfo.number}/
+                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -mkdir -p hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/${buildInfo.number}
+                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -put -f $SERVICE_NAME/* hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/${buildInfo.number}/
                             echo "Successfully copied jar file to HDFS"
                         """
                     }
@@ -259,7 +282,7 @@ pipeline {
             )
         }
         failure {
-            colourText("warn","Process failed at: $STAGE")
+            colourText("warn", "Process failed at: $STAGE")
             slackSend(
                     color: "danger",
                     message: "${currentBuild.fullDisplayName} failed at $STAGE: ${env.RUN_DISPLAY_URL}"

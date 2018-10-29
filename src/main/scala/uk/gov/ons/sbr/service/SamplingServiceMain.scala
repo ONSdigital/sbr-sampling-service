@@ -13,14 +13,17 @@ import uk.gov.ons.sbr.support.TrySupport
 import uk.gov.ons.sbr.utils.Export
 
 
-object SamplingServiceMain {
+object SamplingServiceMain extends Stratification{
   def main(args: Array[String]): Unit = {
     import SparkSessionManager.sparkSession
 
     SparkSessionManager.withSpark{
       SessionLogger.log(msg ="Initiating Sampling Service")
+
+
+
       val processedArguments: SampleMethodsArguments = new ServiceValidation(HiveUnitFrameRepository)
-        .validateAndParseRuntimeArgs(args = args.toList)
+        .parseArgs(args.toList)
       SessionLogger.log(msg ="Passed validation. Beginning sample creation process..")
       createSample(processedArguments)
     }
@@ -28,8 +31,7 @@ object SamplingServiceMain {
 
   def createSample(args: SampleMethodsArguments)(implicit sparkSession: SparkSession): Unit = {
     val stratifiedFrameDf = TrySupport.fold(Try(
-      Stratification.stratification(sparkSession)
-        .stratify(args.unitFrame, args.stratificationProperties)))(onFailure = err =>
+      stratify(args.unitFrame, args.stratificationProperties,args.unitSpecDF)))(onFailure = err =>
       throw new Exception(s"Failed at Stratification method with error [${err.getMessage}]"), onSuccess = identity)
 
     SessionLogger.log(msg ="Applying stratification method process [Passed].")

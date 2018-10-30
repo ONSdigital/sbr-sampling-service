@@ -21,11 +21,12 @@ class ServiceValidation(repository: UnitFrameRepository) {
     val sma = args.filterNot(_.trim().isEmpty) match{
 
       case List(unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDirectoryStr,unit,bounds) => {
-        val params:Seq[scala.util.Try[Any]] = Seq(
+        val params:Seq[scala.util.Try[Any]] = Seq( //
           repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
           if(HdfsSupport.exists(new Path(outputDirectoryStr))) Success(outputDirectoryStr) else Failure(new IllegalArgumentException(s"output directory: $outputDirectoryStr does not exist")),
-          scala.util.Success(Seq(unit,bounds).toDF("unit","bounds"))
+          Success(unit),
+          Success(bounds)
         )
 
         val errors = params.foldRight(""){(el, err) => el match{

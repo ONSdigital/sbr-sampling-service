@@ -7,7 +7,8 @@ case class SampleMethodsArguments(
                                    unitFrame: DataFrame,
                                    stratificationProperties: DataFrame,
                                    outputDirectory: Path,
-                                   unitSpecDF: DataFrame
+                                   unit:String,
+                                   bounds:String
                                  )
 object SampleMethodsArguments{
   def apply(args:Seq[Any]) = args match {
@@ -15,11 +16,13 @@ object SampleMethodsArguments{
     case List(unitFrame:DataFrame,
               stratificationProperties:DataFrame,
               outputDirectoryPath:Path,
-              unitSpecDF:DataFrame
+              unit:String,
+              bounds:String
               ) => new SampleMethodsArguments(unitFrame,
                                               stratificationProperties,
                                               outputDirectoryPath,
-                                              unitSpecDF
+                                              unit,
+                                              bounds
                                              )
     case _ => throw new IllegalArgumentException("cannot create instance of SampleMethodsArguments. Invalid arguments")
      }

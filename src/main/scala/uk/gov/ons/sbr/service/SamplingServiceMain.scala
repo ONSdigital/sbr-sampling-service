@@ -31,7 +31,7 @@ object SamplingServiceMain extends Stratification{
 
   def createSample(args: SampleMethodsArguments)(implicit sparkSession: SparkSession): Unit = {
     val stratifiedFrameDf = TrySupport.fold(Try(
-      stratify(args.unitFrame, args.stratificationProperties,args.unitSpecDF)))(onFailure = err =>
+      stratify(args.unitFrame, args.stratificationProperties,args.bounds)))(onFailure = err =>
       throw new Exception(s"Failed at Stratification method with error [${err.getMessage}]"), onSuccess = identity)
 
     SessionLogger.log(msg ="Applying stratification method process [Passed].")

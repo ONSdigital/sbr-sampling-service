@@ -35,7 +35,8 @@ class ServiceValidation(repository: UnitFrameRepository) {
         }}
 
         if(!errors.isEmpty) throw new IllegalArgumentException(s"following arguments errors occurred: $errors")
-        else SampleMethodsArguments(params)
+        else SampleMethodsArguments(params.map(_.get))
+
 
       }
       case _ => throw new IllegalArgumentException(s"wrong number of arguments: expected 6, actual ${args.length}")

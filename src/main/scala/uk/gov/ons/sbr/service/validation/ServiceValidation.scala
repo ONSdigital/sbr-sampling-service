@@ -24,7 +24,7 @@ class ServiceValidation(repository: UnitFrameRepository) {
         val params:Seq[scala.util.Try[Any]] = Seq( //
           repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
-          if(HdfsSupport.exists(new Path(outputDirectoryStr))) Success(outputDirectoryStr) else Failure(new IllegalArgumentException(s"output directory: $outputDirectoryStr does not exist")),
+          if(HdfsSupport.exists(new Path(outputDirectoryStr))) Success(new Path(outputDirectoryStr)) else Failure(new IllegalArgumentException(s"output directory: $outputDirectoryStr does not exist")),
           Success(unit),
           Success(bounds)
         )

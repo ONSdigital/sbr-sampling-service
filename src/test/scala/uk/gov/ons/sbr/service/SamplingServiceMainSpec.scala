@@ -15,7 +15,7 @@ class SamplingServiceMainSpec extends FreeSpec with Matchers with MockFactory{
   "A sample" - {
     "is created and exported" - {
       "when all arguments are valid and both methods are successful" ignore new Fixture {
-        val input = SampleMethodsArguments(???, ???, ???, ???,???)
+        val input = SampleMethodsArguments("table_name", "path_of_param_file", "path_of_output_file", "Enterprise","paye_empees")
         SamplingServiceMain.createSample(args = input)(aSparkSession)
       }
     }

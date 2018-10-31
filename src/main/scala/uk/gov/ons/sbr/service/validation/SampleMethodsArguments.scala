@@ -24,6 +24,12 @@ object SampleMethodsArguments{
                                               unit,
                                               bounds
                                              )
-    case _ => throw new IllegalArgumentException("cannot create instance of SampleMethodsArguments. Invalid arguments")
+    case _ => throw new IllegalArgumentException(s"cannot create instance of SampleMethodsArguments. Invalid arguments: " +
+      s"unitFrame: ${args(0).getClass.getCanonicalName()};  \n"+
+      s"stratificationProperties: ${args(1).getClass.getCanonicalName()};  \n"+
+      s"outputDirectoryPath: ${args(2).getClass.getCanonicalName()};   \n"+
+      s"unit: ${args(3).getClass.getCanonicalName()};   \n"+
+      s"bounds: ${args(4).getClass.getCanonicalName()};  "
+    )
      }
 }

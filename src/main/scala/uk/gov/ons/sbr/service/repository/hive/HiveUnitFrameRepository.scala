@@ -1,13 +1,14 @@
 package uk.gov.ons.sbr.service.repository.hive
 
-import scala.util.Try
-
+import scala.util.{Success, Try}
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
 import uk.gov.ons.api.java.methods.registers.annotation.Unused
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository.ErrorMessage
 import uk.gov.ons.sbr.support.TrySupport
+import uk.gov.ons.sbr.service.repository.hive.HiveFrame
+
+
 
 object HiveUnitFrameRepository extends UnitFrameRepository {
   override def retrieveTableAsDataFrame(unitFrameDatabaseAndTableName: String)
@@ -30,4 +31,6 @@ object HiveUnitFrameRepository extends UnitFrameRepository {
       case _ if errMsg.startsWith("No Table") => Right(None)
       case e => Left(e)
     }
+
+  override def saveDataFrameToTable(df:DataFrame, dbName: String, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Success(Unit)
 }

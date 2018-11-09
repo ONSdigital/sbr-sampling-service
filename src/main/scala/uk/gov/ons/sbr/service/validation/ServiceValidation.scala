@@ -7,40 +7,39 @@ import uk.gov.ons.sbr.service.repository.UnitFrameRepository
 import uk.gov.ons.sbr.service.repository.hive.HiveFrame
 import uk.gov.ons.sbr.support.HdfsSupport
 import uk.gov.ons.sbr.utils.HadoopPathProcessor.Header
-
+import uk.gov.ons.sbr.globals._
 import scala.util.{Try, _}
 
-@Singleton
-class ServiceValidation(repository: UnitFrameRepository) {
+
+trait ServiceValidation extends Serializable{
 
 
-  def parseArgs(args: List[String])(implicit spark: SparkSession): SampleMethodsArguments = {
-    import spark.implicits._
+  def parseArgs(args: Array[String],argsToParams:(List[String] ) => Seq[Try[Any]])(implicit spark: SparkSession): MethodArguments = {
 
+    require(args.exists(_.trim().isEmpty),"some arguments missing")
 
-    val sma = args.filterNot(_.trim().isEmpty) match{
+    val sma = {
 
-      case List(unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDirectoryStr,unit,bounds) => {
-        val params:Seq[scala.util.Try[Any]] = Seq( //
-          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
-          Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
-          if(HdfsSupport.exists(new Path(outputDirectoryStr))) Success(new Path(outputDirectoryStr)) else Failure(new IllegalArgumentException(s"output directory: $outputDirectoryStr does not exist")),
-          Success(unit),
-          Success(bounds)
-        )
+        val params = argsToParams(args)/*Seq(
+                          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
+                          Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
+                          Success(outputHiveDbName),
+                          Success(outputHiveTableName),
+                          Success(unit),
+                          Success(bounds)
+                        )*/
 
         val errors = params.foldRight(""){(el, err) => el match{
           case Failure(e) => s"$err ${e.getMessage} \n"
           case Success(df) => err
         }}
 
-        if(!errors.isEmpty) throw new IllegalArgumentException(s"following arguments errors occurred: $errors")
-        else SampleMethodsArguments(params.map(_.get))
-
-
+        if(errors.nonEmpty) throw new IllegalArgumentException(s"following arguments errors occurred: $errors")
+        else {
+          val seq: Seq[Any] = params.map(_.get)
+          StratificationMethodArguments(seq)
+        }
       }
-      case _ => throw new IllegalArgumentException(s"wrong number of arguments: expected 6, actual ${args.length}")
-    }
 
     sma
   }

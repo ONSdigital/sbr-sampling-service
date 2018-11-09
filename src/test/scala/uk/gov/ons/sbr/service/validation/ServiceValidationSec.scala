@@ -42,7 +42,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
   "Runtime arguments" - {
     "are evaluated" - {
       "when three arguments are given" - {
-        "returns a SampleMethodsArguments when all arguments are valid" in new Fixture {
+        "returns a SampleMethodArguments when all arguments are valid" in new Fixture {
           import sparkSession.implicits._
 
           (repository.retrieveTableAsDataFrame(_: String)(_: SparkSession)).expects(TargetUnitFrame, sparkSession)
@@ -51,7 +51,7 @@ class ServiceValidationSec extends FreeSpec with Matchers with MockFactory{
           val samplingRuntimeArguments = List(TargetDatabase, TargetTableName, propertiesPath.toString, targetOutputDirectory.toString)
 
           validation.validateAndParseRuntimeArgs(args = samplingRuntimeArguments)(sparkSession) shouldBe
-            a [SampleMethodsArguments]
+            a [SampleMethodArguments]
         }
 
         "throws an exception" - {

@@ -10,32 +10,32 @@ import scala.util.{Success, Try}
 
 case class SampleMethodArguments(
                                    stratificationDF: DataFrame,
-                                   stratificationProperties: DataFrame,
-                                   stratificationFilePath: Path,
-                                   outputDirectory: Path
+                                   samplingProperties: DataFrame,
+                                   outputDbName: String,
+                                   outputTableName: String
                                  ) extends MethodArguments
 object SampleMethodArguments{
 
-  implicit def argsToParams(args:Array[String])(implicit spark: SparkSession) = {
+/*  implicit def argsToParams(args:Array[String])(implicit spark: SparkSession) = {
     Seq[scala.util.Try[Any]] = Seq(
       HiveUnitFrameRepository.retrieveTableAsDataFrame(HiveFrame(database = args(1), tableName = args(2))),
       Try{spark.read.option(Header, value = true).csv(args(3))},
       Success(args(4)),
       Success(args(5))
     )
-  }
+  }*/
 
   def apply(args:Seq[Any]):SampleMethodArguments = args match {
 
     case List(
               stratificationDF:DataFrame,
-              stratificationProperties:DataFrame,
-              stratificationFilePath:Path,
-              outputDirectoryPath:Path
-              ) => new SampleMethodArguments(stratificationDF,
-                                              stratificationProperties,
-                                              stratificationFilePath,
-                                              outputDirectoryPath
+              samplingProperties:DataFrame,
+              outputDbName: String,
+              outputTableName: String
+              ) => new SampleMethodArguments( stratificationDF,
+                                              samplingProperties,
+                                              outputDbName,
+                                              outputTableName
                                              )
     case _ => throw new IllegalArgumentException(
                                                   s"cannot create instance of SampleMethodArguments. Invalid arguments: \n" +

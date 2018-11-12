@@ -1,7 +1,7 @@
 package uk.gov.ons.sbr.service.repository.hive
 
 import scala.util.{Success, Try}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import uk.gov.ons.api.java.methods.registers.annotation.Unused
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository.ErrorMessage
@@ -32,5 +32,5 @@ object HiveUnitFrameRepository extends UnitFrameRepository {
       case e => Left(e)
     }
 
-  override def saveDataFrameToTable(df:DataFrame, dbName: String, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Success(Unit)
+  override def saveDataFrameToTable(df:DataFrame, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Try{df.write.mode(SaveMode.Append).saveAsTable(tableName)}
 }

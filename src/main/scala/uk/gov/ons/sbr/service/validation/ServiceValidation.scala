@@ -4,43 +4,93 @@ import javax.inject.Singleton
 import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import uk.gov.ons.sbr.service.repository.UnitFrameRepository
-import uk.gov.ons.sbr.service.repository.hive.HiveFrame
+import uk.gov.ons.sbr.service.repository.hive.{HiveFrame, HiveUnitFrameRepository}
 import uk.gov.ons.sbr.support.HdfsSupport
 import uk.gov.ons.sbr.utils.HadoopPathProcessor.Header
 import uk.gov.ons.sbr.globals._
+
+import scala.tools.nsc.typechecker.Macros
 import scala.util.{Try, _}
 
 
-trait ServiceValidation extends Serializable{
+@Singleton
+class ServiceValidation(repository: UnitFrameRepository) {
 
 
-  def parseArgs(args: Array[String],argsToParams:(List[String] ) => Seq[Try[Any]])(implicit spark: SparkSession): MethodArguments = {
+  def parseSamplingArgs(args: List[String])(implicit spark: SparkSession): SampleMethodArguments = {
+    import spark.implicits._
 
-    require(args.exists(_.trim().isEmpty),"some arguments missing")
 
-    val sma = {
+    val sma = args.filterNot(_.trim().isEmpty) match{
 
-        val params = argsToParams(args)/*Seq(
-                          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
-                          Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
-                          Success(outputHiveDbName),
-                          Success(outputHiveTableName),
-                          Success(unit),
-                          Success(bounds)
-                        )*/
+      case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDirectoryStr,unit,bounds) => {
+        val params:Seq[scala.util.Try[Any]] = Seq( //
+          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
+          Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
+          if(HdfsSupport.exists(new Path(outputDirectoryStr))) Success(new Path(outputDirectoryStr)) else Failure(new IllegalArgumentException(s"output directory: $outputDirectoryStr does not exist")),
+          Success(unit),
+          Success(bounds)
+        )
 
         val errors = params.foldRight(""){(el, err) => el match{
           case Failure(e) => s"$err ${e.getMessage} \n"
           case Success(df) => err
         }}
 
-        if(errors.nonEmpty) throw new IllegalArgumentException(s"following arguments errors occurred: $errors")
-        else {
-          val seq: Seq[Any] = params.map(_.get)
-          StratificationMethodArguments(seq)
-        }
+        if(!errors.isEmpty) throw new IllegalArgumentException(s"following arguments errors occurred: $errors")
+        else SampleMethodArguments(params.map(_.get))
+
+
       }
+      case _ => throw new IllegalArgumentException(s"wrong number of arguments: expected 6, actual ${args.length}")
+    }
 
     sma
   }
+
+  /*
+     *    [0] "stratification"
+    *     [1] input data hive DB name
+    *     [2] input data hive table name
+    *     [3] path to properties csv
+    *     [4] output hive DB name,
+    *     [5] output hive table name,
+    *     [6] unit name,
+    *     [7] bounds
+  * */
+    def parseStratificationArgs(args: List[String])(implicit spark: SparkSession): StratificationMethodArguments = {
+
+    val sma = args.filterNot(_.trim().isEmpty) match{
+
+      case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName,unit,bounds) => {
+
+          val table = HiveFrame(database = outputDBName, tableName = outputTableName)
+          val exists = spark.catalog.tableExists(table)
+
+
+        val params:Seq[scala.util.Try[Any]] = Seq(
+          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
+          Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
+          if (exists) Success(table) else Failure(new IllegalArgumentException(s"output table does not exist: $table")),
+          Success(unit),
+          Success(bounds)
+        )
+
+        val errors = params.foldRight(""){(el, err) => el match{
+          case Failure(e) => s"$err ${e.getMessage} \n"
+          case Success(df) => err
+        }}
+
+        if(!errors.isEmpty) throw new IllegalArgumentException(s"following arguments errors occurred: $errors")
+        else StratificationMethodArguments(params.map(_.get))
+
+      }
+      case _ => throw new IllegalArgumentException(s"wrong number of arguments: expected 8, actual ${args.length}")
+    }
+
+    sma
+  }
+
+
+
 }

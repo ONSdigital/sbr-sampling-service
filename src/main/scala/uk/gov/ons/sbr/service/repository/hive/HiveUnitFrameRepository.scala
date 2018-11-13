@@ -32,5 +32,5 @@ object HiveUnitFrameRepository extends UnitFrameRepository {
       case e => Left(e)
     }
 
-  override def saveDataFrameToTable(df:DataFrame, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Try{df.write.mode(SaveMode.Append).saveAsTable(tableName)}
+  override def saveDataFrameToTable(df:DataFrame, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Try{df.write.mode(SaveMode.Overwrite).saveAsTable(tableName)}
 }

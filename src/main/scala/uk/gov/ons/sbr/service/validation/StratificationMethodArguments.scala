@@ -1,10 +1,7 @@
 package uk.gov.ons.sbr.service.validation
 
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import uk.gov.ons.sbr.service.repository.hive.{HiveFrame, HiveUnitFrameRepository}
-import uk.gov.ons.sbr.utils.HadoopPathProcessor.Header
-import scala.util.{Success, Try}
+import org.apache.spark.sql.DataFrame
 
 case class StratificationMethodArguments(unitFrame: DataFrame,
                                          stratificationProperties: DataFrame,
@@ -14,16 +11,6 @@ case class StratificationMethodArguments(unitFrame: DataFrame,
                                         ) extends MethodArguments
 object StratificationMethodArguments {
 
-
-/*  implicit def argsToParams(args:Array[String])(implicit spark: SparkSession) = {
-                  Seq[scala.util.Try[Any]] = Seq(
-                    HiveUnitFrameRepository.retrieveTableAsDataFrame(HiveFrame(database = args(1), tableName = args(2))),
-                    Try{spark.read.option(Header, value = true).csv(args(3))},
-                    Success(args(4)),
-                    Success(args(5)),
-                    Success(args(6))
-                  )
-  }*/
 
   def apply(args:Seq[Any]):StratificationMethodArguments = args match {
 

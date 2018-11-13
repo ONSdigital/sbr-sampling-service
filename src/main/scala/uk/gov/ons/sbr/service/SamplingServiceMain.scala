@@ -1,15 +1,14 @@
 package uk.gov.ons.sbr.service
 
-import scala.util.Try
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 import uk.gov.ons.registers.methods.{Sample, Stratification}
 import uk.gov.ons.sbr.logger.SessionLogger
 import uk.gov.ons.sbr.service.repository.hive.{HiveFrame, HiveUnitFrameRepository}
 import uk.gov.ons.sbr.service.session.SparkSessionManager
-import uk.gov.ons.sbr.service.validation.{MethodArguments, SampleMethodArguments, ServiceValidation, StratificationMethodArguments}
+import uk.gov.ons.sbr.service.validation.{SampleMethodArguments, ServiceValidation, StratificationMethodArguments}
 import uk.gov.ons.sbr.support.TrySupport
-import uk.gov.ons.sbr.utils.Export
-import uk.gov.ons.sbr.globals.Globals._
+
+import scala.util.Try
 object SamplingServiceMain extends Stratification{
 
   /**

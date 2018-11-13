@@ -27,12 +27,12 @@ object StratificationMethodArguments {
                                                       bounds
                                                   )
     case _ => throw new IllegalArgumentException(
-      s"cannot create instance of SampleMethodArguments. Invalid arguments: \n" +
-        s"stratificationDF: ${args(0).getClass.getCanonicalName()};  \n"+
-        s"stratificationProperties: ${args(1).getClass.getCanonicalName()};  \n"+
-        s"outputTable: ${args(2).getClass.getCanonicalName()};   \n"+
-        s"unit: ${args(3).getClass.getCanonicalName()};   \n" +
-        s"bound: ${args(4).getClass.getCanonicalName()};   \n"
+      s"cannot create instance of SampleMethodArguments. Invalid arguments:\n" +
+        s"stratificationDF: ${args(0).getClass.getCanonicalName()};\n"+
+        s"stratificationProperties: ${args(1).getClass.getCanonicalName()};\n"+
+        s"outputTable: ${args(2).getClass.getCanonicalName()};\n"+
+        s"unit: ${args(3).getClass.getCanonicalName()};\n" +
+        s"bound: ${args(4).getClass.getCanonicalName()};\n"
     )
   }
 }

@@ -23,13 +23,11 @@ class ServiceValidation(repository: UnitFrameRepository) {
 
     val sma = args.filterNot(_.trim().isEmpty) match{
 
-      case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDirectoryStr,unit,bounds) => {
-        val params:Seq[scala.util.Try[Any]] = Seq( //
+      case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName) => {
+        val params:Seq[scala.util.Try[Any]] = Seq(
           repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
-          if(HdfsSupport.exists(new Path(outputDirectoryStr))) Success(new Path(outputDirectoryStr)) else Failure(new IllegalArgumentException(s"output directory: $outputDirectoryStr does not exist")),
-          Success(unit),
-          Success(bounds)
+          Success(HiveFrame(outputDBName, outputTableName))
         )
 
         val errors = params.foldRight(""){(el, err) => el match{
@@ -64,14 +62,10 @@ class ServiceValidation(repository: UnitFrameRepository) {
 
       case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName,unit,bounds) => {
 
-          val table = HiveFrame(database = outputDBName, tableName = outputTableName)
-          val exists = spark.catalog.tableExists(table)
-
-
         val params:Seq[scala.util.Try[Any]] = Seq(
           repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
-          if (exists) Success(table) else Failure(new IllegalArgumentException(s"output table does not exist: $table")),
+          Success(HiveFrame(outputDBName, outputTableName)),
           Success(unit),
           Success(bounds)
         )

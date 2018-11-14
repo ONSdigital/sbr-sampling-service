@@ -73,7 +73,7 @@ object SamplingServiceMain extends Stratification{
       .create(args.stratificationDF, args.samplingProperties)))(onFailure = err =>
       throw new Exception(s"Failed at Sampling method with error [${err.getMessage}]"), onSuccess = identity)
 
-    HiveUnitFrameRepository.saveDataFrameToTable(samplesDF,HiveFrame(args.outputDbName,args.outputTableName))
+    HiveUnitFrameRepository.saveDataFrameToTable(samplesDF,args.outputTable)
     SessionLogger.log(msg ="Sampling DF saved to Hive.")
 
   }

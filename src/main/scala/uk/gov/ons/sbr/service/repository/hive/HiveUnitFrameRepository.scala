@@ -10,7 +10,7 @@ import uk.gov.ons.sbr.service.repository.hive.HiveFrame
 
 
 
-object HiveUnitFrameRepository extends UnitFrameRepository {
+trait HiveUnitFrameRepository extends UnitFrameRepository with Serializable{
   override def retrieveTableAsDataFrame(unitFrameDatabaseAndTableName: String)
      (implicit activeSession: SparkSession): Try[DataFrame] =
     Try(activeSession.sql(sqlText = s"SELECT * FROM $unitFrameDatabaseAndTableName"))
@@ -34,3 +34,4 @@ object HiveUnitFrameRepository extends UnitFrameRepository {
 
   override def saveDataFrameToTable(df:DataFrame, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Try{df.write.mode(SaveMode.Overwrite).saveAsTable(tableName)}
 }
+//object HiveUnitFrameRepository extends HiveUnitFrameRepository

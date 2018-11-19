@@ -1,31 +1,24 @@
 package uk.gov.ons.sbr.service.validation
 
-import javax.inject.Singleton
-import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
-import uk.gov.ons.sbr.service.repository.UnitFrameRepository
 import uk.gov.ons.sbr.service.repository.hive.{HiveFrame, HiveUnitFrameRepository}
-import uk.gov.ons.sbr.support.HdfsSupport
 import uk.gov.ons.sbr.utils.HadoopPathProcessor.Header
-import uk.gov.ons.sbr.globals._
 
-import scala.tools.nsc.typechecker.Macros
 import scala.util.{Try, _}
 
 
-@Singleton
-class ServiceValidation(repository: UnitFrameRepository) {
+
+trait ServiceValidation extends HiveUnitFrameRepository{
 
 
   def parseSamplingArgs(args: List[String])(implicit spark: SparkSession): SampleMethodArguments = {
-    import spark.implicits._
 
 
     val sma = args.filterNot(_.trim().isEmpty) match{
 
       case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName) => {
         val params:Seq[scala.util.Try[Any]] = Seq(
-          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
+          retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
           Success(HiveFrame(outputDBName, outputTableName))
         )
@@ -63,7 +56,7 @@ class ServiceValidation(repository: UnitFrameRepository) {
       case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName,unit,bounds) => {
 
         val params:Seq[scala.util.Try[Any]] = Seq(
-          repository.retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
+          retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
           Success(HiveFrame(outputDBName, outputTableName)),
           Success(unit),
@@ -84,7 +77,6 @@ class ServiceValidation(repository: UnitFrameRepository) {
 
     sma
   }
-
 
 
 }

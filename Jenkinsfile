@@ -240,10 +240,10 @@ pipeline {
                         sh """
                             ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE mkdir -p $SERVICE_NAME/
                             echo "Successfully created new directory [$SERVICE_NAME/]"
-                            scp -r $distDir* sbr-$ENVIRONMENT-ci@$EDGE_NODE:$SERVICE_NAME/
+                            scp -r $distDir*-all.jar sbr-$ENVIRONMENT-ci@$EDGE_NODE:$SERVICE_NAME/
                             echo "Successfully moved artifact [JAR] and scripts to $SERVICE_NAME/"
-                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -mkdir -p hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/${buildInfo.number}
-                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -put -f $SERVICE_NAME/* hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/${buildInfo.number}/
+                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -mkdir -p hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/
+                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -put -f $SERVICE_NAME/*all.jar hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/sbr-sampling-service-all.jar
                             echo "Successfully copied jar file to HDFS"
                         """
                     }

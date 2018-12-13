@@ -245,7 +245,7 @@ pipeline {
                             echo "Successfully moved artifact [JAR] and scripts to $SERVICE_NAME/"
                             ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -mkdir -p hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/
                             ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -test -e hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/sbr-sampling-service-all.jar
-                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE result=${?}
+                            ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE result=${\?}
                             ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE if [ $result -eq 0 ]; then hdfs dfs -rm -skipTrash hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/sbr-sampling-service-all.jar fi
                             ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -put -f $SERVICE_NAME/$SERVICE_NAME-*${buildInfo.number}-all.jar hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/
                             ssh -o StrictHostKeyChecking=no  sbr-$ENVIRONMENT-ci@$EDGE_NODE hdfs dfs -mv hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/$SERVICE_NAME-*${buildInfo.number}-all.jar hdfs://$PROD_NODE/user/sbr-$ENVIRONMENT-ci/lib/$SERVICE_NAME/sbr-sampling-service-all.jar

@@ -1,0 +1,6 @@
+scalaStyle {
+    configLocation = file("$rootDir/scalastyle-config.xml")
+    includeTestSourceDirectory = true
+    source = 'src/main/scala'
+    testSource = 'src/test/scala'
+}

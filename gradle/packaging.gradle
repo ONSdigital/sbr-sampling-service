@@ -1,0 +1,10 @@
+task sourcesJar(type: Jar) {
+    baseName rootProject.name
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+    archives oozieZip
+}

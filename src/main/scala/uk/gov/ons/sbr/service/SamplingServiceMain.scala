@@ -81,7 +81,7 @@ object SamplingServiceMain extends Stratification with ServiceValidation with Df
     val updStratSmpDF = updStartTableAsDataFrame (args.inpStratTab, args.outputTable)
     saveDataFrameToTable(samplesDF,args.outputTable)
     SessionLogger.log(msg ="Sampling DF saved to Hive.")
-    saveDataFrameToTable(updStratSmpDF,args.outputTable)
+    saveDataFrameToTable(updStratSmpDF,args.updStratTab)
 
   }
 }

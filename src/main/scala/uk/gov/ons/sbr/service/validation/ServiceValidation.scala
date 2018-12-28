@@ -16,11 +16,13 @@ trait ServiceValidation extends HiveUnitFrameRepository{
 
     val sma = args.filterNot(_.trim().isEmpty) match{
 
-      case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName) => {
+      case List(_,unitFrameDatabaseStr,unitFrameTableNameStr,stratificationPropertiesStr,outputDBName, outputTableName, updStratTabName) => {
         val params:Seq[scala.util.Try[Any]] = Seq(
           retrieveTableAsDataFrame(HiveFrame(database = unitFrameDatabaseStr, tableName = unitFrameTableNameStr)),
           Try{spark.read.option(Header, value = true).csv(stratificationPropertiesStr)},
-          Success(HiveFrame(outputDBName, outputTableName))
+          Success(HiveFrame(outputDBName, outputTableName)),
+          Success(HiveFrame(unitFrameDatabaseStr, unitFrameTableNameStr)),
+          Success(HiveFrame(outputDBName, updStratTabName))
         )
 
         val errors = params.foldRight(""){(el, err) => el match{

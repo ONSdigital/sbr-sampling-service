@@ -75,8 +75,13 @@ object SamplingServiceMain extends Stratification with ServiceValidation with Df
       .create(args.stratificationDF, args.samplingProperties)))(onFailure = err =>
       throw new Exception(s"Failed at Sampling method with error [${err.getMessage}]"), onSuccess = identity)
 
+   // val updStratSmpDF = TrySupport.fold(Try(updStartTableAsDataFrame (args.inpStratTab, args.outputTable))(onFailure = err1 =>
+    //  throw new Exception(s"Failed at Sampling method with error [${err1.getMessage}]"), onSuccess = identity)
+
+    val updStratSmpDF = updStartTableAsDataFrame (args.inpStratTab, args.outputTable)
     saveDataFrameToTable(samplesDF,args.outputTable)
     SessionLogger.log(msg ="Sampling DF saved to Hive.")
+    saveDataFrameToTable(updStratSmpDF,args.outputTable)
 
   }
 }

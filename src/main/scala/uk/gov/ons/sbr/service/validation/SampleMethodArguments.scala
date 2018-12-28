@@ -6,7 +6,9 @@ import org.apache.spark.sql.DataFrame
 case class SampleMethodArguments(
                                    stratificationDF: DataFrame,
                                    samplingProperties: DataFrame,
-                                   outputTable: String
+                                   outputTable: String,
+                                   inpStratTab: String,
+                                   updStratTab: String
                                  ) extends MethodArguments
 object SampleMethodArguments{
 
@@ -16,10 +18,14 @@ object SampleMethodArguments{
     case List(
               stratificationDF:DataFrame,
               samplingProperties:DataFrame,
-              outputTable: String
+              outputTable: String,
+              inpStratTab: String,
+              updStratTab: String
               ) => new SampleMethodArguments( stratificationDF,
                                               samplingProperties,
-                                              outputTable
+                                              outputTable,
+                                              inpStratTab,
+                                              updStratTab
                                              )
     case _ => throw new IllegalArgumentException(
                                                   s"cannot create instance of SampleMethodArguments. Invalid arguments: \n" +

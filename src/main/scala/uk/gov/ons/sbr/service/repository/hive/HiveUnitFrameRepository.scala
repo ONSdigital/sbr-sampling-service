@@ -38,7 +38,7 @@ trait HiveUnitFrameRepository extends UnitFrameRepository with Serializable{
     activeSession.sql(sqlText = s"""SELECT strt.*,
                                                CASE WHEN smp.ern IS NOT NULL THEN 'Y' ELSE 'N' END AS selected
                                          FROM $startDBandTabName strt
-                                         LEFET OUTER JOIN $SampleDBandTabName smp
+                                         LEFT OUTER JOIN $SampleDBandTabName smp
                                           ON strt.ern = smp.ern""".stripMargin)
 
 }

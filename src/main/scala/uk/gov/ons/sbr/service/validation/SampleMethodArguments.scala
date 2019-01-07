@@ -8,7 +8,8 @@ case class SampleMethodArguments(
                                    samplingProperties: DataFrame,
                                    outputTable: String,
                                    inpStratTab: String,
-                                   updStratTab: String
+                                   updStratTab: String,
+                                   selectionKey: String
                                  ) extends MethodArguments
 object SampleMethodArguments{
 
@@ -20,12 +21,14 @@ object SampleMethodArguments{
               samplingProperties:DataFrame,
               outputTable: String,
               inpStratTab: String,
-              updStratTab: String
+              updStratTab: String,
+              selectionKey: String
               ) => new SampleMethodArguments( stratificationDF,
                                               samplingProperties,
                                               outputTable,
                                               inpStratTab,
-                                              updStratTab
+                                              updStratTab,
+                                              selectionKey
                                              )
     case _ => throw new IllegalArgumentException(
                                                   s"cannot create instance of SampleMethodArguments. Invalid arguments: \n" +

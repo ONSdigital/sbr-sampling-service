@@ -6,6 +6,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 trait UnitFrameRepository {
   def retrieveTableAsDataFrame(unitFrameName: String)(implicit activeSession: SparkSession): Try[DataFrame]
+  def updStartTableAsDataFrame(startTabName: String, SampleTabName: String, selectionKey: String )(implicit activeSession: SparkSession): DataFrame
   def saveDataFrameToTable(df:DataFrame, tableName:String)(implicit activeSession: SparkSession): Try[Unit]
 
 }

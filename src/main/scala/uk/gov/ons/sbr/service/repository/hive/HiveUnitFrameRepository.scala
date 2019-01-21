@@ -33,5 +33,13 @@ trait HiveUnitFrameRepository extends UnitFrameRepository with Serializable{
     }
 
   override def saveDataFrameToTable(df:DataFrame, tableName:String)(implicit activeSession: SparkSession): Try[Unit] = Try{df.write.mode(SaveMode.Overwrite).saveAsTable(tableName)}
+  override def updStartTableAsDataFrame(startDBandTabName: String, SampleDBandTabName: String, selectionKey : String)
+                                       (implicit activeSession: SparkSession): DataFrame =
+    activeSession.sql(sqlText = s"""SELECT strt.*,
+                                               CASE WHEN smp.$selectionKey IS NOT NULL THEN 'Y' ELSE 'N' END AS selected
+                                         FROM $startDBandTabName strt
+                                         LEFT OUTER JOIN $SampleDBandTabName smp
+                                          ON strt.$selectionKey = smp.$selectionKey""".stripMargin)
+
 }
 //object HiveUnitFrameRepository extends HiveUnitFrameRepository
